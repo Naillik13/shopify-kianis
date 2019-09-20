@@ -1,22 +1,5 @@
 
 <?php
-    $orders = getOrderList();
-    $products = [];
-    foreach ($orders as &$order) :
-        foreach ($order['line_items'] as &$item) :
-            if (array_key_exists($item['product_id'], $products)) {
-                $products[$item['product_id']]['number'] += 1;
-            } else {
-                $temp_array = [];
-                $temp_array['id'] = $item['product_id'];
-                $temp_array['number'] = 1;
-                $products[$item['product_id']] = $temp_array;
-            }
-        endforeach;
-    endforeach;
-    var_dump($products);
-    sort($products);
-    var_dump($products);
 
     function getOrderList() {
         //next example will recieve all messages for specific conversation
@@ -53,8 +36,39 @@
         if (isset($decoded->response->status) && $decoded->response->status == 'ERROR') {
             die('error occured: ' . $decoded->response->errormessage);
         }
-        return $decoded['order'];
+        return $decoded['product'];
     }
+    class product {
+        public $id = 0;
+        public $number = 0;
+    }
+    function intcmp($a,$b) {
+        if((int)$a == (int)$b)return 0;
+        if((int)$a  < (int)$b)return 1;
+        if((int)$a  > (int)$b)return -1;
+    }
+    function cmp($a, $b)
+    {
+        return intcmp($a->number, $b->number);
+    }
+
+    $orders = array_slice(getOrderList(),0,10);
+    $products = [];
+    foreach ($orders as &$order) :
+        foreach ($order['line_items'] as &$item) :
+            if (array_key_exists($item['product_id'], $products)) {
+                $products[$item['product_id']]->number += 1;
+            } else {
+                $temp_object  = new product();
+                $temp_object->id = $item['product_id'];
+                $temp_object->number = 1;
+                $products[$item['product_id']] = $temp_object;
+            }
+        endforeach;
+    endforeach;
+    usort($products, "cmp");
+    $products = array_slice($products, 0, 5)
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -64,18 +78,29 @@
     <body class="container mt-3">
         <div>
             <h2>Order list</h2>
-            <ul class="list-group">
+            <table style="width:100%">
+                <tr>
+                    <th>Id</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Email</th>
+                </tr>
                 <?php foreach ($orders as $order) : ?>
-                    <li class="list-group-item">Order n°<?php echo $order['id'] ?></li>
+                    <tr>
+                        <td><?php echo $order['id'] ?></td>
+                        <td><?php echo $order['total_price'] ?></td>
+                        <td><?php echo $order['created_at'] ?></td>
+                        <td><?php echo $order['email'] ?></td>
+                    </tr>
                 <?php endforeach ?>
-            </ul>
+            </table>
         </div>
-        <div>
-            <h2>Product best</h2>
+        <div class="mt-5">
+            <h2>Five best</h2>
             <ul class="list-group">
                 <?php foreach ($products as $product) : ?>
-                    <?php $product_details = getProductDetails($product['id']); ?>
-                    <li class="list-group-item"><?php echo $product_details['title'] . ' x ' . $product['number']?></li>
+                    <?php $product_details = getProductDetails($product->id); ?>
+                    <li class="list-group-item"><?php echo $product_details['title'] . ' x ' . $product->number?></li>
                 <?php endforeach ?>
             </ul>
         </div>
