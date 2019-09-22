@@ -72,12 +72,21 @@ $products = array_slice($products, 0, 5)
 
 <div class="mt-5">
     <h2>Five best</h2>
-    <ul class="list-group">
+    <table style="width:100%">
+        <thead>
+            <th>Product name</th>
+            <th>Sold number</th>
+        </thead>
+        <tbody>
         <?php foreach ($products as $product) : ?>
             <?php $product_details = getProductDetails($product->id); ?>
-            <li class="list-group-item"><?php echo $product_details['title'] . ' x ' . $product->number ?></li>
+            <tr>
+                <th><?php echo $product_details['title'] ?></th>
+                <td><?php echo $product->number ?></td>
+            </tr>
         <?php endforeach ?>
-    </ul>
+        </tbody>
+    </table>
 </div>
 
 
