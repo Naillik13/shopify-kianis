@@ -101,7 +101,7 @@
 
 <div class="mt-5">
     <h2>Panier moyen</h2>
-    <?php echo $average_basket; ?> €
+    <?php echo "La valeur du panier moyen est de ".$average_basket; ?> €
 </div>
 <div class="mt-5">
     <h2>Commandes par pays</h2>
