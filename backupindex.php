@@ -1,9 +1,10 @@
-<?php
-include('functions.php');
-include('product.php');
-include('country.php');
 
-$orders = array_slice(getOrderList(), 0, 10);
+<?php
+include ('functions.php');
+include ('product.php');
+include ('country.php');
+
+$orders = getOrderList();
 $products = [];
 $country_list = [];
 $total_amount = 0;
@@ -12,18 +13,18 @@ foreach ($orders as &$order) :
     if (array_key_exists($order['billing_address']['country'], $country_list)) {
         $country_list[$order['billing_address']['country']]->number += 1;
     } else {
-        $temp_object = new country();
+        $temp_object  = new country();
         $temp_object->name = $order['billing_address']['country'];
         $temp_object->number = 1;
         $country_list[$order['billing_address']['country']] = $temp_object;
     }
     foreach ($order['line_items'] as &$item) :
         if (array_key_exists($item['product_id'], $products)) {
-            $products[$item['product_id']]->number += 1;
+            $products[$item['product_id']]->number += $item['quantity'];
         } else {
-            $temp_object = new product();
+            $temp_object  = new product();
             $temp_object->id = $item['product_id'];
-            $temp_object->number = 1;
+            $temp_object->number = $item['quantity'];
             $products[$item['product_id']] = $temp_object;
         }
     endforeach;
@@ -69,22 +70,37 @@ $products = array_slice($products, 0, 5)
         </tbody>
     </table>
 </div>
+
 <div class="mt-5">
     <h2>Five best</h2>
-    <ul class="list-group">
+    <table style="width:100%" class="table d-none" id="dataProductTable">
+        <thead>
+        <th>Product name</th>
+        <th>Sold number</th>
+        </thead>
+        <tbody>
         <?php foreach ($products as $product) : ?>
             <?php $product_details = getProductDetails($product->id); ?>
-            <li class="list-group-item"><?php echo $product_details['title'] . ' x ' . $product->number ?></li>
+            <tr>
+                <th><?php echo $product_details['title'] ?></th>
+                <td><?php echo $product->number ?></td>
+            </tr>
         <?php endforeach ?>
-    </ul>
+        </tbody>
+    </table>
+    <div class="chart">
+        <canvas id="productChart"></canvas>
+    </div>
 </div>
+
+
 <div class="mt-5">
     <h2>Average Basket</h2>
     <?php echo $average_basket; ?> €
 </div>
 <div class="mt-5">
     <h2>Country list</h2>
-    <table style="width:100%" class="table d-none" id="dataTable">
+    <table style="width:100%" class="table d-none" id="dataCountryTable">
         <thead>
         <th>Country</th>
         <th>Order number</th>
@@ -99,7 +115,7 @@ $products = array_slice($products, 0, 5)
         </tbody>
     </table>
     <div class="chart">
-        <canvas id="myChart"></canvas>
+        <canvas id="countryChart"></canvas>
     </div>
 </div>
 
@@ -111,8 +127,8 @@ $products = array_slice($products, 0, 5)
         $('#orderTable').DataTable();
     });
 
-    function BuildChart(labels, values, chartTitle) {
-        var ctx = document.getElementById("myChart").getContext('2d');
+    function BuildCountryChart(labels, values, chartTitle) {
+        var ctx = document.getElementById("countryChart").getContext('2d');
         var myChart = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -158,7 +174,7 @@ $products = array_slice($products, 0, 5)
         return myChart;
     }
 
-    var table = document.getElementById('dataTable');
+    var table = document.getElementById('dataCountryTable');
     var json = []; // First row needs to be headers
     var headers = [];
     for (var i = 0; i < table.rows[0].cells.length; i++) {
@@ -188,8 +204,89 @@ $products = array_slice($products, 0, 5)
         return e.ordernumber;
     });
     console.log(values);
-    var chart = BuildChart(labels, values, "");
+    var chart = BuildCountryChart(labels, values, "");
 
+</script>
+<script>
+
+    function BuildProductChart(labels, values, chartTitle) {
+        var ctx = document.getElementById("productChart").getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels, // Our labels
+                datasets: [{
+                    label: chartTitle, // Name the series
+                    data: values, // Our values
+                    backgroundColor: [ // Specify custom colors
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [ // Add custom color borders
+                        'rgba(255,99,132,1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1 // Specify bar border width
+                }]
+            },
+            options: {
+                responsive: true, // Instruct chart js to respond nicely.
+                maintainAspectRatio: false, // Add to prevent default behavior of full-width/height
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            stepSize: 1
+                        }
+                    }]
+                },
+                legend: {
+                    display: false
+                }
+            }
+        });
+        return myChart;
+    }
+
+    var table = document.getElementById('dataProductTable');
+    var json = []; // First row needs to be headers
+    var headers = [];
+    for (var i = 0; i < table.rows[0].cells.length; i++) {
+        headers[i] = table.rows[0].cells[i].innerHTML.toLowerCase().replace(/ /gi, '');
+    }
+
+    // Go through cells
+    for (var i = 1; i < table.rows.length; i++) {
+        var tableRow = table.rows[i];
+        var rowData = {};
+        for (var j = 0; j < tableRow.cells.length; j++) {
+            rowData[headers[j]] = tableRow.cells[j].innerHTML;
+        }
+
+        json.push(rowData);
+    }
+
+    console.log(json);
+
+    var labels = json.map(function (e) {
+        return e.productname;
+    });
+    console.log(labels); // ["2016", "2017", "2018", "2019"]
+
+    // Map JSON values back to values array
+    var values = json.map(function (e) {
+        return e.soldnumber;
+    });
+    console.log(values);
+    var chart = BuildProductChart(labels, values, "");
 </script>
 </body>
 </html>
