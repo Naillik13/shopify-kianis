@@ -1,37 +1,37 @@
 
 <?php
-    include ('functions.php');
-    include ('product.php');
-    include ('country.php');
+include ('functions.php');
+include ('product.php');
+include ('country.php');
 
-    $orders = getOrderList();
-    $products = [];
-    $country_list = [];
-    $total_amount = 0;
-    foreach ($orders as &$order) :
-        $total_amount += $order['total_price'];
-        if (array_key_exists($order['billing_address']['country'], $country_list)) {
-            $country_list[$order['billing_address']['country']]->number += 1;
+$orders = getOrderList();
+$products = [];
+$country_list = [];
+$total_amount = 0;
+foreach ($orders as &$order) :
+    $total_amount += $order['total_price'];
+    if (array_key_exists($order['billing_address']['country'], $country_list)) {
+        $country_list[$order['billing_address']['country']]->number += 1;
+    } else {
+        $temp_object  = new country();
+        $temp_object->name = $order['billing_address']['country'];
+        $temp_object->number = 1;
+        $country_list[$order['billing_address']['country']] = $temp_object;
+    }
+    foreach ($order['line_items'] as &$item) :
+        if (array_key_exists($item['product_id'], $products)) {
+            $products[$item['product_id']]->number += $item['quantity'];
         } else {
-            $temp_object  = new country();
-            $temp_object->name = $order['billing_address']['country'];
-            $temp_object->number = 1;
-            $country_list[$order['billing_address']['country']] = $temp_object;
+            $temp_object  = new product();
+            $temp_object->id = $item['product_id'];
+            $temp_object->number = $item['quantity'];
+            $products[$item['product_id']] = $temp_object;
         }
-        foreach ($order['line_items'] as &$item) :
-            if (array_key_exists($item['product_id'], $products)) {
-                $products[$item['product_id']]->number += $item['quantity'];
-            } else {
-                $temp_object  = new product();
-                $temp_object->id = $item['product_id'];
-                $temp_object->number = $item['quantity'];
-                $products[$item['product_id']] = $temp_object;
-            }
-        endforeach;
     endforeach;
-    $average_basket = round($total_amount / count($orders), 2);
-    usort($products, "cmp");
-    $products = array_slice($products, 0, 5)
+endforeach;
+$average_basket = round($total_amount / count($orders), 2);
+usort($products, "cmp");
+$products = array_slice($products, 0, 5)
 
 ?>
 <!DOCTYPE html>
@@ -46,13 +46,9 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
-<div class="jumbotron bg-warning text-white">
-    <h1>Dashboard de la boutique Kianis</h1>
-    <p>Par Killian Galea, Anatole Allain et Issam Derrar</p>
-</div>
 <body class="container mt-3">
 <div>
-    <h2>Commandes par pays</h2>
+    <h2>Order by country</h2>
     <table id="orderTable" class="table table-striped table-bordered" style="width:100%">
         <thead>
         <tr>
@@ -76,11 +72,11 @@
 </div>
 
 <div class="mt-5">
-    <h2>Meilleures ventes</h2>
+    <h2>Five best</h2>
     <table style="width:100%" class="table d-none" id="dataProductTable">
         <thead>
-            <th>Product name</th>
-            <th>Sold number</th>
+        <th>Product name</th>
+        <th>Sold number</th>
         </thead>
         <tbody>
         <?php foreach ($products as $product) : ?>
@@ -92,7 +88,6 @@
         <?php endforeach ?>
         </tbody>
     </table>
-
     <div class="chart">
         <canvas id="productChart"></canvas>
     </div>
@@ -100,11 +95,11 @@
 
 
 <div class="mt-5">
-    <h2>Panier moyen</h2>
-    <?php echo "La valeur du panier moyen est de ".$average_basket; ?> €
+    <h2>Average Basket</h2>
+    <?php echo $average_basket; ?> €
 </div>
 <div class="mt-5">
-    <h2>Commandes par pays</h2>
+    <h2>Country list</h2>
     <table style="width:100%" class="table d-none" id="dataCountryTable">
         <thead>
         <th>Country</th>
@@ -127,68 +122,42 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
-<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
-<script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
-
-
 <script>
     $(document).ready(function () {
-        $('#orderTable').DataTable( {
-            "language": {
-                "paginate": {
-                    "previous": "Page precedente",
-                    "next": "Page suivante"
-
-                }
-            }
-        });
-
+        $('#orderTable').DataTable();
     });
 
     function BuildCountryChart(labels, values, chartTitle) {
         var ctx = document.getElementById("countryChart").getContext('2d');
         var myChart = new Chart(ctx, {
-            type: 'doughnut',
+            type: 'bar',
             data: {
                 labels: labels, // Our labels
                 datasets: [{
                     label: chartTitle, // Name the series
                     data: values, // Our values
                     backgroundColor: [ // Specify custom colors
-                        'rgba(230, 25, 75, 0.4)',
-                        'rgba(60, 180, 75, 0.4)',
-                        'rgba(255, 225, 25, 0.4)',
-                        'rgba(0, 130, 200, 0.4)',
-                        'rgba(245, 130, 48, 0.4)',
-                        'rgba(70, 240, 240, 0.4)',
-                        'rgba(240, 50, 230, 0.4)',
-                        'rgba(210, 245, 60, 0.4)',
-                        'rgba(250, 190, 190, 0.4)',
-                        'rgba(0, 128, 128, 0.4)',
-                        'rgba(230, 190, 255, 0.4)',
-                        'rgba(145, 30, 180, 0.4)'
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
                     ],
                     borderColor: [ // Add custom color borders
-                        'rgba(230, 25, 75, 1)',
-                        'rgba(60, 180, 75, 1)',
-                        'rgba(255, 225, 25, 1)',
-                        'rgba(0, 130, 200, 1)',
-                        'rgba(245, 130, 48, 1)',
-                        'rgba(70, 240, 240, 1)',
-                        'rgba(240, 50, 230, 1)',
-                        'rgba(210, 245, 60, 1)',
-                        'rgba(250, 190, 190, 1)',
-                        'rgba(0, 128, 128, 1)',
-                        'rgba(230, 190, 255, 1)',
-                        'rgba(145, 30, 180, 1)'
+                        'rgba(255,99,132,1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
                     ],
                     borderWidth: 1 // Specify bar border width
                 }]
             },
             options: {
                 responsive: true, // Instruct chart js to respond nicely.
-                maintainAspectRatio: true, // Add to prevent default behavior of full-width/height
+                maintainAspectRatio: false, // Add to prevent default behavior of full-width/height
                 scales: {
                     yAxes: [{
                         ticks: {
@@ -198,7 +167,7 @@
                     }]
                 },
                 legend: {
-                    display: true
+                    display: false
                 }
             }
         });
@@ -240,11 +209,10 @@
 </script>
 <script>
 
-function BuildProductChart(labels, values, chartTitle) {
+    function BuildProductChart(labels, values, chartTitle) {
         var ctx = document.getElementById("productChart").getContext('2d');
         var myChart = new Chart(ctx, {
             type: 'bar',
-
             data: {
                 labels: labels, // Our labels
                 datasets: [{
@@ -271,7 +239,7 @@ function BuildProductChart(labels, values, chartTitle) {
             },
             options: {
                 responsive: true, // Instruct chart js to respond nicely.
-                maintainAspectRatio: true, // Add to prevent default behavior of full-width/height
+                maintainAspectRatio: false, // Add to prevent default behavior of full-width/height
                 scales: {
                     yAxes: [{
                         ticks: {
