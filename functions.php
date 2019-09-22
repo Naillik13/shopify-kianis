@@ -1,6 +1,5 @@
 <?php
 function getOrderList() {
-    //next example will recieve all messages for specific conversation
     $service_url = getenv("SHOPIFY_URL").'orders.json';
     $curl = curl_init($service_url);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -19,7 +18,6 @@ function getOrderList() {
 }
 
 function getProductDetails($product_id) {
-    //next example will recieve all messages for specific conversation
     $service_url = getenv("SHOPIFY_URL").'products/' . $product_id . '.json';
     $curl = curl_init($service_url);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);

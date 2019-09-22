@@ -20,11 +20,11 @@
         }
         foreach ($order['line_items'] as &$item) :
             if (array_key_exists($item['product_id'], $products)) {
-                $products[$item['product_id']]->number += 1;
+                $products[$item['product_id']]->number += $item['quantity'];
             } else {
                 $temp_object  = new product();
                 $temp_object->id = $item['product_id'];
-                $temp_object->number = 1;
+                $temp_object->number = $item['quantity'];
                 $products[$item['product_id']] = $temp_object;
             }
         endforeach;
