@@ -69,7 +69,6 @@ $products = array_slice($products, 0, 5)
         </tbody>
     </table>
 </div>
-
 <div class="mt-5">
     <h2>Five best</h2>
     <ul class="list-group">
@@ -79,8 +78,6 @@ $products = array_slice($products, 0, 5)
         <?php endforeach ?>
     </ul>
 </div>
-
-
 <div class="mt-5">
     <h2>Average Basket</h2>
     <?php echo $average_basket; ?> €
