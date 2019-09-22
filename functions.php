@@ -1,12 +1,14 @@
 <?php
+
 function getOrderList() {
     //next example will recieve all messages for specific conversation
-    $service_url = getenv("SHOPIFY_URL").'orders.json';
+    $service_url = "https://kianis-shop.myshopify.com/admin/api/2019-07/".'orders.json';
     $curl = curl_init($service_url);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
     $curl_response = curl_exec($curl);
     if ($curl_response === false) {
         $info = curl_getinfo($curl);
+        var_dump(curl_error($curl));
         curl_close($curl);
         die('error occured during curl exec. Additioanl info: ' . var_export($info));
     }
@@ -20,7 +22,7 @@ function getOrderList() {
 
 function getProductDetails($product_id) {
     //next example will recieve all messages for specific conversation
-    $service_url = getenv("SHOPIFY_URL").'products/' . $product_id . '.json';
+    $service_url = "https://kianis-shop.myshopify.com/admin/api/2019-07/".'products/' . $product_id . '.json';
     $curl = curl_init($service_url);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
     $curl_response = curl_exec($curl);
