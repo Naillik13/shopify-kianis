@@ -4,7 +4,7 @@
     include ('product.php');
     include ('country.php');
 
-    $orders = array_slice(getOrderList(),0,10);
+    $orders = getOrderList();
     $products = [];
     $country_list = [];
     $total_amount = 0;
