@@ -1,36 +1,37 @@
-<?php
-include('functions.php');
-include('product.php');
-include('country.php');
 
-$orders = array_slice(getOrderList(), 0, 10);
-$products = [];
-$country_list = [];
-$total_amount = 0;
-foreach ($orders as &$order) :
-    $total_amount += $order['total_price'];
-    if (array_key_exists($order['billing_address']['country'], $country_list)) {
-        $country_list[$order['billing_address']['country']]->number += 1;
-    } else {
-        $temp_object = new country();
-        $temp_object->name = $order['billing_address']['country'];
-        $temp_object->number = 1;
-        $country_list[$order['billing_address']['country']] = $temp_object;
-    }
-    foreach ($order['line_items'] as &$item) :
-        if (array_key_exists($item['product_id'], $products)) {
-            $products[$item['product_id']]->number += 1;
+<?php
+    include ('functions.php');
+    include ('product.php');
+    include ('country.php');
+
+    $orders = array_slice(getOrderList(),0,10);
+    $products = [];
+    $country_list = [];
+    $total_amount = 0;
+    foreach ($orders as &$order) :
+        $total_amount += $order['total_price'];
+        if (array_key_exists($order['billing_address']['country'], $country_list)) {
+            $country_list[$order['billing_address']['country']]->number += 1;
         } else {
-            $temp_object = new product();
-            $temp_object->id = $item['product_id'];
+            $temp_object  = new country();
+            $temp_object->name = $order['billing_address']['country'];
             $temp_object->number = 1;
-            $products[$item['product_id']] = $temp_object;
+            $country_list[$order['billing_address']['country']] = $temp_object;
         }
+        foreach ($order['line_items'] as &$item) :
+            if (array_key_exists($item['product_id'], $products)) {
+                $products[$item['product_id']]->number += $item['quantity'];
+            } else {
+                $temp_object  = new product();
+                $temp_object->id = $item['product_id'];
+                $temp_object->number = $item['quantity'];
+                $products[$item['product_id']] = $temp_object;
+            }
+        endforeach;
     endforeach;
-endforeach;
-$average_basket = round($total_amount / count($orders), 2);
-usort($products, "cmp");
-$products = array_slice($products, 0, 5)
+    $average_basket = round($total_amount / count($orders), 2);
+    usort($products, "cmp");
+    $products = array_slice($products, 0, 5)
 
 ?>
 <!DOCTYPE html>

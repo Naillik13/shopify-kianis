@@ -1,7 +1,5 @@
 <?php
-
 function getOrderList() {
-    //next example will recieve all messages for specific conversation
     $service_url = "https://399a4c49d653393c2b2f1390499bcb1e:9022981471e71455d8776ce94d80dbc2@kianis-shop.myshopify.com/admin/api/2019-07/".'orders.json';
     $curl = curl_init($service_url);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -21,7 +19,6 @@ function getOrderList() {
 }
 
 function getProductDetails($product_id) {
-    //next example will recieve all messages for specific conversation
     $service_url = "https://399a4c49d653393c2b2f1390499bcb1e:9022981471e71455d8776ce94d80dbc2@kianis-shop.myshopify.com/admin/api/2019-07/".'products/' . $product_id . '.json';
     $curl = curl_init($service_url);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
